@@ -42,20 +42,40 @@ class _WebViewPage {
     }
   }
 
+  _handleQuilttConnectorEvent(WebUri uri) async {
+    if (uri.host == "oauthrequested") {
+      var oauthUrl = Uri.decodeFull(uri.queryParameters['oauthUrl']!);
+
+      if (await canLaunchUrlString(oauthUrl)) {
+        launchUrlString(oauthUrl, mode: LaunchMode.externalApplication);
+      }
+    }
+
+    if (uri.host == "exitsuccess") {
+      _success(Result(uri.queryParameters['connectionId']));
+      _closeWebView();
+    }
+  }
+
   Widget build(BuildContext context) {
     var webView = InAppWebView(
       initialUrlRequest: URLRequest(url: WebUri(_connectorUrl!)),
       initialSettings: InAppWebViewSettings(useShouldOverrideUrlLoading: true),
       onLoadStop: (controller, url) async {
-        // @todo Handle no sessionToken and other future config options
         await controller.evaluateJavascript(source: """
-          window.postMessage(
-            {
-              source: 'quiltt',
-              type: 'Options',
-              token: '${_config.sessionToken}',
-              connectorId: '${_config.connectorId}}',
-            });
+          const options = {
+            source: 'quiltt',
+            type: 'Options',
+            token: '${_config.sessionToken}',
+            connectorId: '${_config.connectorId}'
+          };
+          const compactedOptions = Object.keys(options).reduce((acc, key) => {
+            if (options[key] !== 'null') {
+              acc[key] = options[key];
+            }
+            return acc;
+          }, {});
+          window.postMessage(compactedOptions);
           """);
       },
       shouldOverrideUrlLoading: (controller, navigationAction) async {
@@ -63,37 +83,13 @@ class _WebViewPage {
 
         if (["https", "http"].contains(uri.scheme) &&
             uri.host.contains("quiltt.app")) {
-          debugPrint("https or http");
           return NavigationActionPolicy.ALLOW;
         }
 
         if (uri.scheme == "quilttconnector") {
-          debugPrint("quilttconnect: ${uri.host}");
-
-          if (uri.host == "oauthrequested") {
-            debugPrint("loaded uri $uri");
-
-            var oauthUrl = Uri.decodeFull(uri.queryParameters['oauthUrl']!);
-
-            debugPrint("oauthUrl $oauthUrl");
-
-            if (await canLaunchUrlString(oauthUrl)) {
-              // await launchUrlString("www.example.com",
-              //     mode: LaunchMode.externalApplication);
-              await launchUrlString(oauthUrl,
-                  mode: LaunchMode.externalApplication);
-            }
-          }
-
-          if (uri.host == "exitsuccess") {
-            debugPrint("connectionId: ${uri.queryParameters['connectionId']}");
-            _success(Result(uri.queryParameters['connectionId']));
-            _closeWebView();
-          }
-
-          debugPrint("NavigationActionPolicy.CANCEL ${uri.toString()}");
-          return NavigationActionPolicy.CANCEL;
+          _handleQuilttConnectorEvent(uri);
         }
+        return NavigationActionPolicy.CANCEL;
       },
     );
     return Scaffold(body: webView);
