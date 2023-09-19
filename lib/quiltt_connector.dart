@@ -1,7 +1,7 @@
 library quiltt_connector;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class QuilttConnector {
@@ -22,7 +22,6 @@ class QuilttConnector {
 }
 
 class _WebViewPage {
-  String? _connectorUrl;
   late Function(Result result) _success;
   late Configuration _config;
   BuildContext? _context;
@@ -32,8 +31,6 @@ class _WebViewPage {
     _success = success;
     _config = config;
     _context = context;
-    _connectorUrl = "https://${config.connectorId}.quiltt.dev/?mode=webview";
-    debugPrint("init url: $_connectorUrl");
   }
 
   _closeWebView() {
@@ -42,7 +39,7 @@ class _WebViewPage {
     }
   }
 
-  _handleQuilttConnectorEvent(WebUri uri) async {
+  _handleQuilttConnectorEvent(Uri uri) async {
     if (uri.host == "oauthrequested") {
       var oauthUrl = Uri.decodeFull(uri.queryParameters['oauthUrl']!);
 
@@ -58,41 +55,53 @@ class _WebViewPage {
   }
 
   Widget build(BuildContext context) {
-    var webView = InAppWebView(
-      initialUrlRequest: URLRequest(url: WebUri(_connectorUrl!)),
-      initialSettings: InAppWebViewSettings(useShouldOverrideUrlLoading: true),
-      onLoadStop: (controller, url) async {
-        await controller.evaluateJavascript(source: """
-          const options = {
-            source: 'quiltt',
-            type: 'Options',
-            token: '${_config.sessionToken}',
-            connectorId: '${_config.connectorId}'
-          };
-          const compactedOptions = Object.keys(options).reduce((acc, key) => {
-            if (options[key] !== 'null') {
-              acc[key] = options[key];
+    var connectorUrl =
+        "https://${_config.connectorId}.quiltt.dev/?mode=webview";
+    var javaScript = """
+      const options = {
+        source: 'quiltt',
+        type: 'Options',
+        token: '${_config.sessionToken}',
+        connectorId: '${_config.connectorId}'
+      };
+      const compactedOptions = Object.keys(options).reduce((acc, key) => {
+        if (options[key] !== 'null') {
+          acc[key] = options[key];
+        }
+        return acc;
+      }, {});
+      window.postMessage(compactedOptions);
+     """;
+    WebViewController controller = WebViewController();
+    controller
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(const Color(0x00000000))
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onProgress: (int progress) {
+            // Update loading bar.
+          },
+          onPageStarted: (String url) {},
+          onPageFinished: (String url) {
+            controller.runJavaScript(javaScript);
+          },
+          onWebResourceError: (WebResourceError error) {},
+          onNavigationRequest: (NavigationRequest request) {
+            Uri uri = Uri.parse(request.url);
+
+            if (uri.scheme == "quilttconnector") {
+              _handleQuilttConnectorEvent(uri);
+              return NavigationDecision.prevent;
             }
-            return acc;
-          }, {});
-          window.postMessage(compactedOptions);
-          """);
-      },
-      shouldOverrideUrlLoading: (controller, navigationAction) async {
-        var uri = navigationAction.request.url!;
+            return NavigationDecision.navigate;
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(connectorUrl));
 
-        if (["https", "http"].contains(uri.scheme) &&
-            uri.host.contains("quiltt.app")) {
-          return NavigationActionPolicy.ALLOW;
-        }
-
-        if (uri.scheme == "quilttconnector") {
-          _handleQuilttConnectorEvent(uri);
-        }
-        return NavigationActionPolicy.CANCEL;
-      },
+    return Scaffold(
+      body: WebViewWidget(controller: controller),
     );
-    return Scaffold(body: webView);
   }
 }
 
