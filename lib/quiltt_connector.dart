@@ -72,6 +72,7 @@ class _WebViewPage {
         type: 'Options',
         token: '${_config.sessionToken}',
         connectorId: '${_config.connectorId}',
+        connectionId: '${_config.connectionId}',
         oauthRedirectUrl: '$oauthRedirectUrl',
       };
       const compactedOptions = Object.keys(options).reduce((acc, key) => {
@@ -85,7 +86,6 @@ class _WebViewPage {
     WebViewController controller = WebViewController();
     controller
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(const Color(0x00000000))
       ..setNavigationDelegate(
         NavigationDelegate(
           onProgress: (int progress) {},
@@ -114,11 +114,13 @@ class _WebViewPage {
 
 class Configuration {
   String connectorId;
+  String? connectionId;
   String? sessionToken;
   String? oauthRedirectUrl;
 
   Configuration({
     required this.connectorId,
+    this.connectionId,
     this.sessionToken,
     this.oauthRedirectUrl,
   });

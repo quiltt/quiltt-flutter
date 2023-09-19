@@ -8,6 +8,7 @@ class _Example extends State {
   showQuilttConnector() {
     Configuration configuration = Configuration(
         connectorId: "connector_id",
+        // connectionId: "connection_id", optional for connection repair
         sessionToken: "session_token",
         oauthRedirectUrl: "quilttexample://open.flutter.app");
 
