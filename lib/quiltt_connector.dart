@@ -53,19 +53,26 @@ class _WebViewPage {
         _closeWebView();
       default:
         debugPrint("Unknown event: ${uri.host}");
-      // code block
     }
+  }
+
+  _encodeUrl(String url) {
+    return Uri.encodeComponent(url);
   }
 
   Widget build(BuildContext context) {
     var connectorUrl =
         "https://${_config.connectorId}.quiltt.dev/?mode=webview";
+    dynamic oauthRedirectUrl = _config.oauthRedirectUrl == null
+        ? null
+        : _encodeUrl(_config.oauthRedirectUrl!);
     var javaScript = """
       const options = {
         source: 'quiltt',
         type: 'Options',
         token: '${_config.sessionToken}',
-        connectorId: '${_config.connectorId}'
+        connectorId: '${_config.connectorId}',
+        oauthRedirectUrl: '$oauthRedirectUrl',
       };
       const compactedOptions = Object.keys(options).reduce((acc, key) => {
         if (options[key] !== 'null') {
@@ -108,10 +115,12 @@ class _WebViewPage {
 class Configuration {
   String connectorId;
   String? sessionToken;
+  String? oauthRedirectUrl;
 
   Configuration({
     required this.connectorId,
     this.sessionToken,
+    this.oauthRedirectUrl,
   });
 }
 

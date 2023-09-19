@@ -66,7 +66,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   _launchConnector() {
     Configuration configuration = Configuration(
-        connectorId: "connector_id", sessionToken: "session_token");
+        connectorId: "connector_id",
+        sessionToken: "session_token",
+        oauthRedirectUrl: "quilttexample://open.flutter.app");
 
     QuilttConnector quilttConnector = QuilttConnector(configuration);
     quilttConnector.launch(context, (Result result) {
