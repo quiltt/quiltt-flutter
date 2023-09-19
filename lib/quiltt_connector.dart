@@ -40,17 +40,23 @@ class _WebViewPage {
   }
 
   _handleQuilttConnectorEvent(Uri uri) async {
-    if (uri.host == "oauthrequested") {
-      var oauthUrl = Uri.decodeFull(uri.queryParameters['oauthUrl']!);
+    switch (uri.host) {
+      case "oauthrequested":
+        var oauthUrl = Uri.decodeFull(uri.queryParameters['oauthUrl']!);
 
-      if (await canLaunchUrlString(oauthUrl)) {
-        launchUrlString(oauthUrl, mode: LaunchMode.externalApplication);
-      }
-    }
-
-    if (uri.host == "exitsuccess") {
-      _success(Result(uri.queryParameters['connectionId']));
-      _closeWebView();
+        if (await canLaunchUrlString(oauthUrl)) {
+          launchUrlString(oauthUrl, mode: LaunchMode.externalApplication);
+        }
+        break;
+      case "exitsuccess":
+        _success(Result(uri.queryParameters['connectionId']));
+        _closeWebView();
+      case "exitabort":
+      case "exiterror":
+        _closeWebView();
+      default:
+        debugPrint("Unknown event: ${uri.host}");
+      // code block
     }
   }
 
@@ -78,9 +84,7 @@ class _WebViewPage {
       ..setBackgroundColor(const Color(0x00000000))
       ..setNavigationDelegate(
         NavigationDelegate(
-          onProgress: (int progress) {
-            // Update loading bar.
-          },
+          onProgress: (int progress) {},
           onPageStarted: (String url) {},
           onPageFinished: (String url) {
             controller.runJavaScript(javaScript);
@@ -100,8 +104,7 @@ class _WebViewPage {
       ..loadRequest(Uri.parse(connectorUrl));
 
     return Scaffold(
-      body: WebViewWidget(controller: controller),
-    );
+        body: SafeArea(child: WebViewWidget(controller: controller)));
   }
 }
 
