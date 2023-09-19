@@ -43,10 +43,7 @@ class _WebViewPage {
     switch (uri.host) {
       case "oauthrequested":
         var oauthUrl = Uri.decodeFull(uri.queryParameters['oauthUrl']!);
-
-        if (await canLaunchUrlString(oauthUrl)) {
-          launchUrlString(oauthUrl, mode: LaunchMode.externalApplication);
-        }
+        await launchUrlString(oauthUrl, mode: LaunchMode.externalApplication);
         break;
       case "exitsuccess":
         _success(Result(uri.queryParameters['connectionId']));
@@ -90,11 +87,11 @@ class _WebViewPage {
             controller.runJavaScript(javaScript);
           },
           onWebResourceError: (WebResourceError error) {},
-          onNavigationRequest: (NavigationRequest request) {
+          onNavigationRequest: (NavigationRequest request) async {
             Uri uri = Uri.parse(request.url);
 
             if (uri.scheme == "quilttconnector") {
-              _handleQuilttConnectorEvent(uri);
+              await _handleQuilttConnectorEvent(uri);
               return NavigationDecision.prevent;
             }
             return NavigationDecision.navigate;
