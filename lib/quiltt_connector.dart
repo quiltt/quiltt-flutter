@@ -56,18 +56,10 @@ class _WebViewPage {
     }
   }
 
-  _encodeUrl(String url) {
-    return Uri.encodeComponent(url);
-  }
-
   Widget build(BuildContext context) {
+    var oauthRedirectUrl = Uri.encodeComponent(_config.oauthRedirectUrl);
     var connectorUrl =
-        "https://${_config.connectorId}.quiltt.dev/?mode=webview&quiltt_debug=true";
-    // Plaid might need to encode the redirect url
-    // dynamic oauthRedirectUrl = _config.oauthRedirectUrl == null
-    //     ? null
-    //     : _encodeUrl(_config.oauthRedirectUrl!);
-    debugPrint("oauthRedirectUrl: ${_config.oauthRedirectUrl}");
+        "https://${_config.connectorId}.quiltt.dev/?mode=webview&oauth_redirect_url=$oauthRedirectUrl&quiltt_debug=true";
     var javaScript = """
       const options = {
         source: 'quiltt',
@@ -75,7 +67,6 @@ class _WebViewPage {
         token: '${_config.sessionToken}',
         connectorId: '${_config.connectorId}',
         connectionId: '${_config.connectionId}',
-        oauthRedirectUrl: '${_config.oauthRedirectUrl}',
       };
       const compactedOptions = Object.keys(options).reduce((acc, key) => {
         if (options[key] !== 'null') {
@@ -116,15 +107,15 @@ class _WebViewPage {
 
 class Configuration {
   String connectorId;
+  String oauthRedirectUrl;
   String? connectionId;
   String? sessionToken;
-  String? oauthRedirectUrl;
 
   Configuration({
     required this.connectorId,
+    required this.oauthRedirectUrl,
     this.connectionId,
     this.sessionToken,
-    this.oauthRedirectUrl,
   });
 }
 
