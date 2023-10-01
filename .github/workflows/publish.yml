@@ -1,0 +1,36 @@
+name: Publish to pub.dev
+
+on:
+  push:
+    tags:
+    - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Required for authentication using GitHub-signed OIDC token
+    steps:
+      - uses: actions/checkout@v3
+      - uses: flutter-actions/setup-flutter@v2
+        with:
+          version: '3.10.6'
+          channel: 'stable'
+          cache: true
+          cache-key: flutter # optional, change this to force refresh cache
+          cache-path: ${{ runner.tool_cache }}/flutter # optional, change this to specify the cache path
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Prepare Env
+        shell: bash
+        env:
+          PUB_DEV_PUBLISH_ACCESS_TOKEN: ${{ secrets.PUB_DEV_PUBLISH_ACCESS_TOKEN }}
+          PUB_DEV_PUBLISH_REFRESH_TOKEN: ${{ secrets.PUB_DEV_PUBLISH_REFRESH_TOKEN }}
+          PUB_DEV_PUBLISH_TOKEN_ENDPOINT: ${{ secrets.PUB_DEV_PUBLISH_TOKEN_ENDPOINT }}
+          PUB_DEV_PUBLISH_EXPIRATION: ${{ secrets.PUB_DEV_PUBLISH_EXPIRATION }}
+        run: |
+          sh ./prepare_deploy_env.sh
+      - name: Check Publish Warnings
+        run: flutter pub publish --dry-run
+      - name: Publish Package
+        run: flutter pub publish -f

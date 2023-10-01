@@ -1,11 +1,11 @@
 name: quiltt_connector
-description: Quiltt Connector SDK
-version: 0.1.0
+description: A Flutter SDK for Quiltt Connector, support iOS and Android.
+version: 0.1.1
 homepage: https://quiltt.io/
 repository: https://github.com/quiltt/quiltt-connector-flutter-sdk
 
 environment:
-  sdk: '>=3.1.0 <4.0.0'
+  sdk: '>=3.0.6 <4.0.0'
   flutter: ">=1.17.0"
 
 dependencies:
