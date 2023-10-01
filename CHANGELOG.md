@@ -1,3 +1,7 @@
+## Version 0.1.2
+
+- Re-release without auto release
+
 ## Version 0.1.1
 
 - Fix connector base url and auto release via Github actions
