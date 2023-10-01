@@ -1,33 +1,33 @@
-name: Publish to pub.dev
+# name: Publish to pub.dev
 
-on:
-  push:
-    tags:
-    - 'v[0-9]+.[0-9]+.[0-9]+*'
+# on:
+#   push:
+#     tags:
+#     - 'v[0-9]+.[0-9]+.[0-9]+*'
 
-jobs:
-  publish:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write # Required for authentication using GitHub-signed OIDC token
-    steps:
-      - uses: actions/checkout@v3
-      - uses: dart-lang/setup-dart@v1
-        with:
-          sdk: '3.0.6'
-      - uses: flutter-actions/setup-flutter@v2
-        with:
-          version: '3.10.6'
-          channel: 'stable'
-          cache: true
-          cache-key: flutter # optional, change this to force refresh cache
-          cache-path: ${{ runner.tool_cache }}/flutter # optional, change this to specify the cache path
-      - name: Install dependencies
-        run: flutter pub get
-      - name: Publish
-        uses: sakebook/actions-flutter-pub-publisher@v1.4.1
-        with:
-          credential: ${{ secrets.CREDENTIAL_JSON }}
-          flutter_package: true
-          skip_test: true
-          dry_run: false
+# jobs:
+#   publish:
+#     runs-on: ubuntu-latest
+#     permissions:
+#       id-token: write # Required for authentication using GitHub-signed OIDC token
+#     steps:
+#       - uses: actions/checkout@v3
+#       - uses: dart-lang/setup-dart@v1
+#         with:
+#           sdk: '3.0.6'
+#       - uses: flutter-actions/setup-flutter@v2
+#         with:
+#           version: '3.10.6'
+#           channel: 'stable'
+#           cache: true
+#           cache-key: flutter # optional, change this to force refresh cache
+#           cache-path: ${{ runner.tool_cache }}/flutter # optional, change this to specify the cache path
+#       - name: Install dependencies
+#         run: flutter pub get
+#       - name: Publish
+#         uses: sakebook/actions-flutter-pub-publisher@v1.4.1
+#         with:
+#           credential: ${{ secrets.CREDENTIAL_JSON }}
+#           flutter_package: true
+#           skip_test: true
+#           dry_run: false
