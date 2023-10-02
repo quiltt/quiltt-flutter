@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quiltt_connector/quiltt_connector.dart';
+import 'package:quiltt_connector/configuration.dart';
 
 void main() {
   runApp(const MyApp());
@@ -65,15 +66,27 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _launchConnector() {
-    Configuration configuration = Configuration(
-        connectorId: "connector_id",
-        sessionToken: "session_token",
+    String token = "token";
+
+    QuilttConnectorConfiguration config = QuilttConnectorConfiguration(
+        connectorId: "connectorId",
         oauthRedirectUrl: "quilttexample://open.flutter.app");
 
-    QuilttConnector quilttConnector = QuilttConnector(configuration);
-    quilttConnector.launch(context, (Result result) {
-      // handle result
-      _setConnectionId(result.connectionId!);
+    debugPrint(
+        '_launchConnector: ${config.connectorId}, $config.oauthRedirectUrl');
+    QuilttConnector quilttConnector = QuilttConnector();
+    quilttConnector.authenticate(token);
+    quilttConnector.connect(context, config, onEvent: (event) {
+      debugPrint("onEvent: ${event.eventMetadata}");
+    }, onExit: (event) {
+      debugPrint("onExit: ${event.eventMetadata}");
+    }, onExitSuccess: (event) {
+      debugPrint("onExitSuccess: ${event.eventMetadata}");
+      _setConnectionId(event.eventMetadata.connectionId!);
+    }, onExitAbort: (event) {
+      debugPrint("onExitAbort: ${event.eventMetadata}");
+    }, onExitError: (event) {
+      debugPrint("onExitError: ${event.eventMetadata}");
     });
   }
 
