@@ -1,20 +1,56 @@
 # Quiltt Connector Flutter SDK
 
+[![pub package](https://img.shields.io/pub/v/quiltt_connector.svg)](https://pub.dev/packages/quiltt_connector)
+
 ## Usage
 
-```dart
-class _Example extends State {
-  
-  showQuilttConnector() {
-    Configuration configuration = Configuration(
-        connectorId: "connector_id",
-        // connectionId: "connection_id", optional for connection repair
-        sessionToken: "session_token",
-        oauthRedirectUrl: "quilttexample://open.flutter.app");
+Add `quiltt_connector` as a [dependency in your pubspec.yaml file](https://pub.dev/packages/quiltt_connector/install).
 
-    QuilttConnector quilttConnector = QuilttConnector(configuration);
-    quilttConnector.launch(context, (Result result) {
-      // handle result
+```dart
+import 'package:quiltt_connector/quiltt_connector.dart';
+import 'package:quiltt_connector/configuration.dart';
+
+class _Example extends State {
+  connect() {
+    QuilttConnectorConfiguration config = QuilttConnectorConfiguration(
+      connectorId: "connectorId",
+      oauthRedirectUrl: "quilttexample://open.flutter.app");
+
+    QuilttConnector quilttConnector = QuilttConnector();
+    quilttConnector.authenticate(token);
+    quilttConnector.connect(context, config, onEvent: (event) {
+      debugPrint("onEvent: ${event.eventMetadata}");
+    }, onExit: (event) {
+      debugPrint("onExit: ${event.eventMetadata}");
+    }, onExitSuccess: (event) {
+      debugPrint("onExitSuccess: ${event.eventMetadata}");
+      _setConnectionId(event.eventMetadata.connectionId!);
+    }, onExitAbort: (event) {
+      debugPrint("onExitAbort: ${event.eventMetadata}");
+    }, onExitError: (event) {
+      debugPrint("onExitError: ${event.eventMetadata}");
+    });
+  }
+
+  reconnect() {
+    QuilttConnectorConfiguration config = QuilttConnectorConfiguration(
+      connectorId: "connectorId",
+      connectionId: "connectionId",
+      oauthRedirectUrl: "quilttexample://open.flutter.app");
+
+    QuilttConnector quilttConnector = QuilttConnector();
+    quilttConnector.authenticate(token);
+    quilttConnector.reconnect(context, config, onEvent: (event) {
+      debugPrint("onEvent: ${event.eventMetadata}");
+    }, onExit: (event) {
+      debugPrint("onExit: ${event.eventMetadata}");
+    }, onExitSuccess: (event) {
+      debugPrint("onExitSuccess: ${event.eventMetadata}");
+      _setConnectionId(event.eventMetadata.connectionId!);
+    }, onExitAbort: (event) {
+      debugPrint("onExitAbort: ${event.eventMetadata}");
+    }, onExitError: (event) {
+      debugPrint("onExitError: ${event.eventMetadata}");
     });
   }
 
