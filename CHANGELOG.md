@@ -1,3 +1,7 @@
+## Version 1.0.0
+
+- Change public interface to match js sdk
+
 ## Version 0.1.2
 
 - Re-release without auto release
