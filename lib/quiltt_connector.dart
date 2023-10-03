@@ -17,7 +17,6 @@ class QuilttConnector {
   /// Pass token to authenticate, authenticate through UI if token is absent
   void authenticate(String token) {
     sessionToken = token;
-    // controller.postMessage?
     String javaScript = '''
       const options = {
         source: 'quiltt',
@@ -133,14 +132,17 @@ class _WebViewPage {
         onExitSuccess
             ?.call(Event(type: eventType, eventMetadata: eventMetadata));
         _closeWebView();
+        break;
       case 'exitabort':
         onExit?.call(Event(type: eventType, eventMetadata: eventMetadata));
         onExitAbort?.call(Event(type: eventType, eventMetadata: eventMetadata));
         _closeWebView();
+        break;
       case 'exiterror':
         onExit?.call(Event(type: eventType, eventMetadata: eventMetadata));
         onExitAbort?.call(Event(type: eventType, eventMetadata: eventMetadata));
         _closeWebView();
+        break;
       default:
         debugPrint('Unknown event: ${uri.host}');
     }
