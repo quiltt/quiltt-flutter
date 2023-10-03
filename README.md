@@ -17,8 +17,11 @@ class _Example extends State {
       oauthRedirectUrl: "quilttexample://open.flutter.app");
 
     QuilttConnector quilttConnector = QuilttConnector();
-    quilttConnector.authenticate(token);
-    quilttConnector.connect(context, config, onEvent: (event) {
+    quilttConnector.authenticate(token); // Optional
+    quilttConnector.connect(context,
+      config,
+      // Optional: event handler function
+      onEvent: (event) {
       debugPrint("onEvent: ${event.eventMetadata}");
     }, onExit: (event) {
       debugPrint("onExit: ${event.eventMetadata}");
@@ -39,8 +42,11 @@ class _Example extends State {
       oauthRedirectUrl: "quilttexample://open.flutter.app");
 
     QuilttConnector quilttConnector = QuilttConnector();
-    quilttConnector.authenticate(token);
-    quilttConnector.reconnect(context, config, onEvent: (event) {
+    quilttConnector.authenticate(token); // Optional
+    quilttConnector.reconnect(context,
+      config,
+      // Optional: event handler function
+      onEvent: (event) {
       debugPrint("onEvent: ${event.eventMetadata}");
     }, onExit: (event) {
       debugPrint("onExit: ${event.eventMetadata}");
