@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:quiltt_connector/quiltt_connector.dart';
 import 'package:quiltt_connector/configuration.dart';
+import './components/bottom_button.dart';
+import './components/constants.dart';
 
 void main() {
   runApp(const MyApp());
@@ -30,10 +32,10 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.purple.shade900),
+        colorScheme: ColorScheme.fromSeed(seedColor: kQuilttPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Quiltt Connector Home'),
+      home: const MyHomePage(title: 'Quiltt Connector Example'),
     );
   }
 }
@@ -66,27 +68,20 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _launchConnector() {
-    String token = "token";
-
     QuilttConnectorConfiguration config = QuilttConnectorConfiguration(
-        connectorId: "connectorId",
+        connectorId: "yldluevd9q",
         oauthRedirectUrl: "quilttexample://open.flutter.app");
 
     debugPrint(
         '_launchConnector: ${config.connectorId}, $config.oauthRedirectUrl');
     QuilttConnector quilttConnector = QuilttConnector();
-    quilttConnector.authenticate(token);
-    quilttConnector.connect(context, config, onEvent: (event) {
-      debugPrint("onEvent: ${event.eventMetadata}");
-    }, onExit: (event) {
-      debugPrint("onExit: ${event.eventMetadata}");
+    quilttConnector.connect(context, config, onExit: (event) {
+      debugPrint("onExit: ${event.type}");
+      debugPrint("onExit: ${event.eventMetadata.connectorId}");
     }, onExitSuccess: (event) {
-      debugPrint("onExitSuccess: ${event.eventMetadata}");
+      debugPrint("onExitSuccess: ${event.eventMetadata.connectorId}");
+      debugPrint("onExitSuccess: ${event.eventMetadata.connectionId}");
       _setConnectionId(event.eventMetadata.connectionId!);
-    }, onExitAbort: (event) {
-      debugPrint("onExitAbort: ${event.eventMetadata}");
-    }, onExitError: (event) {
-      debugPrint("onExitError: ${event.eventMetadata}");
     });
   }
 
@@ -132,13 +127,12 @@ class _MyHomePageState extends State<MyHomePage> {
             Text(
               'Connection ID: $_connectionId',
             ),
+            BottomButton(
+              onTap: _launchConnector,
+              buttonTitle: 'Launch Connector',
+            ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _launchConnector,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
