@@ -1,3 +1,8 @@
+## Version 1.0.1
+
+- Update dependencies
+- Add sdk=flutter for analytic purposes
+
 ## Version 1.0.0
 
 - Change public interface to match js sdk
