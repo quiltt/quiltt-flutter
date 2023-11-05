@@ -1,6 +1,6 @@
 name: quiltt_connector
 description: A Flutter SDK for Quiltt Connector, support iOS and Android.
-version: 1.0.0
+version: 1.0.1
 homepage: https://quiltt.io/
 repository: https://github.com/quiltt/quiltt-connector-flutter-sdk
 
@@ -11,8 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  webview_flutter: ^4.2.4
-  url_launcher: ^6.1.14
+  webview_flutter: ^4.4.1
+  url_launcher: ^6.2.1
 
 dev_dependencies:
   flutter_test:
