@@ -1,3 +1,8 @@
+## Version 2.0.0
+
+- Support Plaid
+- Expose profile id and match JavaScript sdk event interface
+
 ## Version 1.0.1
 
 - Update dependencies
