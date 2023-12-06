@@ -13,8 +13,8 @@ import 'package:quiltt_connector/configuration.dart';
 class _Example extends State {
   connect() {
     QuilttConnectorConfiguration config = QuilttConnectorConfiguration(
-      connectorId: "connectorId",
-      oauthRedirectUrl: "quilttexample://open.flutter.app");
+      connectorId: "<CONNECTOR_ID>",
+      oauthRedirectUrl: "<YOUR_HTTPS_APP_LINK>");
 
     QuilttConnector quilttConnector = QuilttConnector();
     quilttConnector.authenticate(token); // Optional
@@ -37,9 +37,9 @@ class _Example extends State {
 
   reconnect() {
     QuilttConnectorConfiguration config = QuilttConnectorConfiguration(
-      connectorId: "connectorId",
-      connectionId: "connectionId",
-      oauthRedirectUrl: "quilttexample://open.flutter.app");
+      connectorId: "<CONNECTOR_ID>",
+      connectionId: "<CONNECTION_ID>", // To support the Reconnect Flow
+      oauthRedirectUrl: "<YOUR_HTTPS_APP_LINK>");
 
     QuilttConnector quilttConnector = QuilttConnector();
     quilttConnector.authenticate(token); // Optional

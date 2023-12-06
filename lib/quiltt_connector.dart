@@ -115,7 +115,27 @@ class _WebViewPage {
     }
   }
 
-  _handleQuilttConnectorEvent(Uri uri) async {
+  final _shouldRenderList = [
+    'quiltt.app',
+    'quiltt.dev',
+    'moneydesktop.com',
+    'cdn.plaid.com/link/v2/stable/link.html',
+  ];
+
+  _shouldRender(String url) {
+    for (var host in _shouldRenderList) {
+      if (url.contains(host)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  _handleOAuth(String oauthUrl) async {
+    await launchUrlString(oauthUrl, mode: LaunchMode.externalApplication);
+  }
+
+  _handleQuilttConnectorEvent(Uri uri, String initInjectedJavaScript) async {
     EventMetadata eventMetadata = EventMetadata(
       connectorId: config.connectorId,
       connectionId: uri.queryParameters['connectionId'],
@@ -123,9 +143,12 @@ class _WebViewPage {
     );
     String eventType = uri.host;
     switch (uri.host) {
+      case 'load':
+        controller.runJavaScript(initInjectedJavaScript);
+        break;
       case 'oauthrequested':
         var oauthUrl = Uri.decodeFull(uri.queryParameters['oauthUrl']!);
-        await launchUrlString(oauthUrl, mode: LaunchMode.externalApplication);
+        await _handleOAuth(oauthUrl);
         break;
       case 'exitsuccess':
         onExit?.call(Event(type: eventType, eventMetadata: eventMetadata));
@@ -143,6 +166,10 @@ class _WebViewPage {
         onExitAbort?.call(Event(type: eventType, eventMetadata: eventMetadata));
         _closeWebView();
         break;
+      case 'authenticate':
+        // This was exposed as a callback for web, to allow hiding of the loading box.
+        // Mobile is fullscreen, so they are going to get loading screen.
+        break;
       default:
         debugPrint('Unknown event: ${uri.host}');
     }
@@ -153,7 +180,7 @@ class _WebViewPage {
     var connectorUrl =
         'https://${config.connectorId}.quiltt.app/?mode=webview&oauth_redirect_url=$oauthRedirectUrl&sdk=flutter';
     debugPrint(connectorUrl);
-    var javaScript = '''
+    var initInjectedJavaScript = '''
       const options = {
         source: 'quiltt',
         type: 'Options',
@@ -176,18 +203,22 @@ class _WebViewPage {
         NavigationDelegate(
           onProgress: (int progress) {},
           onPageStarted: (String url) {},
-          onPageFinished: (String url) {
-            controller.runJavaScript(javaScript);
-          },
+          onPageFinished: (String url) {},
           onWebResourceError: (WebResourceError error) {},
           onNavigationRequest: (NavigationRequest request) async {
             Uri uri = Uri.parse(request.url);
 
             if (uri.scheme == 'quilttconnector') {
-              await _handleQuilttConnectorEvent(uri);
+              await _handleQuilttConnectorEvent(uri, initInjectedJavaScript);
               return NavigationDecision.prevent;
             }
-            return NavigationDecision.navigate;
+
+            if (_shouldRender(request.url)) {
+              return NavigationDecision.navigate;
+            }
+
+            await _handleOAuth(request.url);
+            return NavigationDecision.prevent;
           },
         ),
       )
