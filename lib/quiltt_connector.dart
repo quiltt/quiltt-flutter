@@ -32,11 +32,11 @@ class QuilttConnector {
   connect(
     BuildContext context,
     QuilttConnectorConfiguration config, {
-    Function(Event event)? onEvent,
-    Function(Event event)? onExit,
-    Function(Event event)? onExitSuccess,
-    Function(Event event)? onExitAbort,
-    Function(Event event)? onExitError,
+    Function(ConnectorSDKOnEventCallback event)? onEvent,
+    Function(ConnectorSDKOnEventExitCallback event)? onExit,
+    Function(ConnectorSDKOnExitSuccessCallback event)? onExitSuccess,
+    Function(ConnectorSDKOnExitAbortCallback event)? onExitAbort,
+    Function(ConnectorSDKOnExitErrorCallback event)? onExitError,
   }) {
     connectorId = config.connectorId;
     _webViewPage._init(controller, context, config,
@@ -56,11 +56,11 @@ class QuilttConnector {
   reconnect(
     BuildContext context,
     QuilttConnectorConfiguration config, {
-    Function(Event event)? onEvent,
-    Function(Event event)? onExit,
-    Function(Event event)? onExitSuccess,
-    Function(Event event)? onExitAbort,
-    Function(Event event)? onExitError,
+    Function(ConnectorSDKOnEventCallback event)? onEvent,
+    Function(ConnectorSDKOnEventExitCallback event)? onExit,
+    Function(ConnectorSDKOnExitSuccessCallback event)? onExitSuccess,
+    Function(ConnectorSDKOnExitAbortCallback event)? onExitAbort,
+    Function(ConnectorSDKOnExitErrorCallback event)? onExitError,
   }) {
     connectorId = config.connectorId;
     connectionId = config.connectionId!;
@@ -84,19 +84,19 @@ class _WebViewPage {
   late BuildContext context;
   late QuilttConnectorConfiguration config;
   String? token;
-  Function(Event event)? onEvent;
-  Function(Event event)? onExit;
-  Function(Event event)? onExitSuccess;
-  Function(Event event)? onExitAbort;
-  Function(Event event)? onExitError;
+  Function(ConnectorSDKOnEventCallback event)? onEvent;
+  Function(ConnectorSDKOnEventExitCallback event)? onExit;
+  Function(ConnectorSDKOnExitSuccessCallback event)? onExitSuccess;
+  Function(ConnectorSDKOnExitAbortCallback event)? onExitAbort;
+  Function(ConnectorSDKOnExitErrorCallback event)? onExitError;
 
   _init(controller, context, QuilttConnectorConfiguration config,
       {String? token,
-      Function(Event event)? onEvent,
-      Function(Event event)? onExit,
-      Function(Event event)? onExitSuccess,
-      Function(Event event)? onExitAbort,
-      Function(Event event)? onExitError}) {
+      Function(ConnectorSDKOnEventCallback event)? onEvent,
+      Function(ConnectorSDKOnEventExitCallback event)? onExit,
+      Function(ConnectorSDKOnExitSuccessCallback event)? onExitSuccess,
+      Function(ConnectorSDKOnExitAbortCallback event)? onExitAbort,
+      Function(ConnectorSDKOnExitErrorCallback event)? onExitError}) {
     this.controller = controller;
     this.context = context;
     this.token = token;
@@ -136,10 +136,11 @@ class _WebViewPage {
   }
 
   _handleQuilttConnectorEvent(Uri uri, String initInjectedJavaScript) async {
-    EventMetadata eventMetadata = EventMetadata(
+    ConnectorSDKCallbackMetadata eventMetadata = ConnectorSDKCallbackMetadata(
       connectorId: config.connectorId,
       connectionId: uri.queryParameters['connectionId'],
       moveId: uri.queryParameters['moveId'],
+      profileId: uri.queryParameters['profileId'],
     );
     String eventType = uri.host;
     switch (uri.host) {
@@ -151,24 +152,37 @@ class _WebViewPage {
         await _handleOAuth(oauthUrl);
         break;
       case 'exitsuccess':
-        onExit?.call(Event(type: eventType, eventMetadata: eventMetadata));
-        onExitSuccess
-            ?.call(Event(type: eventType, eventMetadata: eventMetadata));
+        onEvent?.call(ConnectorSDKOnEventCallback(
+            type: eventType, eventMetadata: eventMetadata));
+        onExit?.call(ConnectorSDKOnEventExitCallback(
+            type: eventType, eventMetadata: eventMetadata));
+        onExitSuccess?.call(
+            ConnectorSDKOnExitSuccessCallback(eventMetadata: eventMetadata));
         _closeWebView();
         break;
       case 'exitabort':
-        onExit?.call(Event(type: eventType, eventMetadata: eventMetadata));
-        onExitAbort?.call(Event(type: eventType, eventMetadata: eventMetadata));
+        onEvent?.call(ConnectorSDKOnEventCallback(
+            type: eventType, eventMetadata: eventMetadata));
+        onExit?.call(ConnectorSDKOnEventExitCallback(
+            type: eventType, eventMetadata: eventMetadata));
+        onExitAbort?.call(
+            ConnectorSDKOnExitAbortCallback(eventMetadata: eventMetadata));
         _closeWebView();
         break;
       case 'exiterror':
-        onExit?.call(Event(type: eventType, eventMetadata: eventMetadata));
-        onExitAbort?.call(Event(type: eventType, eventMetadata: eventMetadata));
+        onEvent?.call(ConnectorSDKOnEventCallback(
+            type: eventType, eventMetadata: eventMetadata));
+        onExit?.call(ConnectorSDKOnEventExitCallback(
+            type: eventType, eventMetadata: eventMetadata));
+        onExitAbort?.call(
+            ConnectorSDKOnExitAbortCallback(eventMetadata: eventMetadata));
         _closeWebView();
         break;
       case 'authenticate':
         // This was exposed as a callback for web, to allow hiding of the loading box.
         // Mobile is fullscreen, so they are going to get loading screen.
+        onEvent?.call(ConnectorSDKOnEventCallback(
+            type: eventType, eventMetadata: eventMetadata));
         break;
       default:
         debugPrint('Unknown event: ${uri.host}');

@@ -77,16 +77,16 @@ class _MyHomePageState extends State<MyHomePage> {
     QuilttConnector quilttConnector = QuilttConnector();
     quilttConnector.authenticate(token);
     quilttConnector.connect(context, config, onEvent: (event) {
-      debugPrint("onEvent: ${event.eventMetadata}");
+      debugPrint("onEvent: ${event.type} ${event.eventMetadata.connectorId}");
     }, onExit: (event) {
-      debugPrint("onExit: ${event.eventMetadata}");
+      debugPrint("onExit: ${event.type} ${event.eventMetadata.connectorId}");
     }, onExitSuccess: (event) {
-      debugPrint("onExitSuccess: ${event.eventMetadata}");
+      debugPrint("onExitSuccess: ${event.eventMetadata.connectionId}");
       _setConnectionId(event.eventMetadata.connectionId!);
     }, onExitAbort: (event) {
-      debugPrint("onExitAbort: ${event.eventMetadata}");
+      debugPrint("onExitAbort: ${event.eventMetadata.connectorId}");
     }, onExitError: (event) {
-      debugPrint("onExitError: ${event.eventMetadata}");
+      debugPrint("onExitError: ${event.eventMetadata.connectorId}");
     });
   }
 
