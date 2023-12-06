@@ -1,13 +1,11 @@
 class ConnectorSDKCallbackMetadata {
   String connectorId;
   String? connectionId;
-  String? moveId;
   String? profileId;
 
   ConnectorSDKCallbackMetadata({
     required this.connectorId,
     this.connectionId,
-    this.moveId,
     this.profileId,
   });
 }

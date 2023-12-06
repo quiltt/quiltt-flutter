@@ -139,7 +139,6 @@ class _WebViewPage {
     ConnectorSDKCallbackMetadata eventMetadata = ConnectorSDKCallbackMetadata(
       connectorId: config.connectorId,
       connectionId: uri.queryParameters['connectionId'],
-      moveId: uri.queryParameters['moveId'],
       profileId: uri.queryParameters['profileId'],
     );
     String eventType = uri.host;
