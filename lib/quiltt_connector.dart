@@ -177,7 +177,7 @@ class _WebViewPage {
   Widget build(BuildContext context, {String? token, String? connectionId}) {
     var oauthRedirectUrl = Uri.encodeComponent(config.oauthRedirectUrl);
     var connectorUrl =
-        'https://${config.connectorId}.quiltt.app/?mode=webview&oauth_redirect_url=$oauthRedirectUrl&sdk=flutter&quiltt&quiltt_debug=true';
+        'https://${config.connectorId}.quiltt.app/?mode=webview&oauth_redirect_url=$oauthRedirectUrl&sdk=flutter';
     debugPrint(connectorUrl);
     var initInjectedJavaScript = '''
       const options = {
