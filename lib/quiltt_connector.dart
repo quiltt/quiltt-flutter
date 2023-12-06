@@ -167,7 +167,8 @@ class _WebViewPage {
         _closeWebView();
         break;
       case 'authenticate':
-        // @todo handle Authenticate
+        // This was exposed as a callback for web, to allow hiding of the loading box.
+        // Mobile is fullscreen, so they are going to get loading screen.
         break;
       default:
         debugPrint('Unknown event: ${uri.host}');
