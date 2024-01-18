@@ -26,4 +26,9 @@ jobs:
           distribution: temurin
           java-version: 21
       - name: Build Android example app
-        run: cd example && flutter pub get && flutter build appbundle
+        run: |
+          cd example
+          flutter pub get
+          flutter doctor
+          yes | flutter doctor --android-licenses
+          flutter build appbundle
