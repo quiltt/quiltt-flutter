@@ -25,7 +25,5 @@ jobs:
           # MacOS might be running openjdk 17 (https://whichjdk.com/#apple-silicon) but we want to run the latest LTS on Linux
           distribution: temurin
           java-version: 21
-      - name: Install dependencies
-        run: flutter pub get
       - name: Build Android example app
-        run: cd example && flutter build appbundle
+        run: cd example && flutter pub get && flutter build appbundle
