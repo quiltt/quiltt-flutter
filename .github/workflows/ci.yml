@@ -29,6 +29,5 @@ jobs:
         run: |
           cd example
           flutter pub get
-          flutter doctor
-          yes | flutter doctor --android-licenses
-          flutter build appbundle
+          cd android
+          ./gradlew assembleRelease
