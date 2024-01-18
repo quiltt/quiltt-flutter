@@ -1,4 +1,4 @@
-# Quiltt Connector Flutter SDK
+# Quiltt Flutter SDK
 
 [![pub package](https://img.shields.io/pub/v/quiltt_connector.svg)](https://pub.dev/packages/quiltt_connector)
 
