@@ -1,0 +1,57 @@
+require 'octokit'
+require 'semantic'
+
+REPO_NAME = 'quiltt/quiltt-flutter'
+GITHUB_TOKEN = ENV['GITHUB_TOKEN']
+
+def release(level)
+  client = ::Octokit::Client.new(access_token: GITHUB_TOKEN)
+  latest_release = client.latest_release(REPO_NAME)
+
+  current_version = Semantic::Version.new(latest_release.tag_name.gsub('v', ''))
+  new_version = current_version.increment!(level).to_s
+
+  # Update version in pubspec.yaml
+  yaml = YAML.load_file('../pubspec.yaml')
+  yaml['version'] = new_version
+  File.open('../pubspec.yaml', 'w') { |f| f.write yaml.to_yaml }
+
+  set_github_release(
+    repository_name: REPO_NAME,
+    api_token: GITHUB_TOKEN,
+    name: new_version.to_s,
+    tag_name: new_version.to_s,
+    is_generate_release_notes: true,
+    commitish: 'main'
+  )
+end
+
+lane :release_patch do
+  check_publish
+  build_example_app
+  release(:patch)
+end
+
+lane :release_minor do
+  check_publish
+  build_example_app
+  release(:minor)
+end
+
+lane :release_major do
+  check_publish
+  build_example_app
+  release(:major)
+end
+
+lane :check_publish do
+  sh('flutter pub get')
+  sh('flutter pub publish --dry-run')
+end
+
+lane :build_example_app do
+  # TODO: run tests, build android as a stop gap for now
+  Dir.chdir('../example') do
+    sh('flutter build appbundle')
+  end
+end
