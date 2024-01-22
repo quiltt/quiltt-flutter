@@ -27,30 +27,31 @@ def release(level)
 end
 
 lane :release_patch do
+  check_publish
   build_example_app
   release(:patch)
 end
 
 lane :release_minor do
+  check_publish
   build_example_app
   release(:minor)
 end
 
 lane :release_major do
+  check_publish
   build_example_app
   release(:major)
 end
 
-lane :build_example_app do
+lane :check_publish do
   sh('flutter pub get')
   sh('flutter pub publish --dry-run')
+end
+
+lane :build_example_app do
   # TODO: run tests, build android as a stop gap for now
   Dir.chdir('../example') do
-    # Use gradlew as a workaround
-    # Not sure why flutter build appbundle with below error
-    # Your app is using an unsupported Gradle project. To fix this problem, create a new project by running flutter create -t app <app-directory> and then move the dart code, assets and pubspec.yaml to the new project.
-    # sh('./gradlew assembleRelease')
-    sh('flutter build apk --split-per-abi')
-    # sh('flutter build appbundle')
+    sh('flutter build appbundle')
   end
 end

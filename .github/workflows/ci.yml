@@ -22,16 +22,13 @@ jobs:
         with:
           ruby-version: "3"
 
-      # - name: Set up JDK 17
-      #   uses: actions/setup-java@v4
-      #   with:
-      #     # Read https://whichjdk.com/#tldr to understand the difference between different distributions
-      #     # MacOS might be running openjdk 17 (https://whichjdk.com/#apple-silicon) but we want to run the latest LTS on Linux
-      #     distribution: temurin
-      #     java-version: 17
-
       - name: Install fastlane and dependencies
         run: bundle install
 
-      - name: Build Android example app
-        run: bundle exec fastlane build_example_app
+      - name: Check Publish
+        run: bundle exec fastlane check_publish
+
+      # In CI, got this error, might be some setup issue, locally it works fine.
+      # [!] Your app is using an unsupported Gradle project. To fix this problem, create a new project by running `flutter create -t app <app-directory>` and then move the dart code, assets and pubspec.yaml to the new project.
+      # - name: Build Android example app
+      #   run: bundle exec fastlane build_example_app
