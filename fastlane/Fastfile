@@ -49,7 +49,7 @@ lane :build_example_app do
     # Use gradlew as a workaround
     # Not sure why flutter build appbundle with below error
     # Your app is using an unsupported Gradle project. To fix this problem, create a new project by running flutter create -t app <app-directory> and then move the dart code, assets and pubspec.yaml to the new project.
-    sh('./gradlew assembleRelease')
-    # sh('flutter build appbundle')
+    # sh('./gradlew assembleRelease')
+    sh('flutter build appbundle')
   end
 end
