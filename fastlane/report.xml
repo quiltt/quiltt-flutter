@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="fastlane.lanes">
+    
+    
+    
+      
+      <testcase classname="fastlane.lanes" name="0: Switch to build_example_app lane" time="0.00028">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="1: flutter pub get" time="0.982427">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="2: flutter pub publish --dry-run" time="2.031509">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="3: flutter build appbundle" time="1.886591">
+        
+      </testcase>
+    
+  </testsuite>
+</testsuites>

@@ -3,8 +3,8 @@ name: CI
 on: push
 
 jobs:
-  publish:
-    runs-on: buildjet-2vcpu-ubuntu-2204
+  ci:
+    runs-on: ubuntu-latest
     permissions:
       id-token: write # Required for authentication using GitHub-signed OIDC token
     steps:
@@ -18,16 +18,12 @@ jobs:
           channel: "stable"
           cache: true
           cache-key: ${{ runner.tool_cache }}/flutter # optional, change this to force refresh cache
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
+      - uses: ruby/setup-ruby@v1
         with:
-          # Read https://whichjdk.com/#tldr to understand the difference between different distributions
-          # MacOS might be running openjdk 17 (https://whichjdk.com/#apple-silicon) but we want to run the latest LTS on Linux
-          distribution: temurin
-          java-version: 21
+          ruby-version: "3"
+
+      - name: Install fastlane and dependencies
+        run: bundle install
+
       - name: Build Android example app
-        run: |
-          cd example
-          flutter pub get
-          cd android
-          ./gradlew assembleRelease
+        run: bundle exec fastlane build_example_app
