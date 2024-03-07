@@ -200,6 +200,7 @@ class _WebViewPage {
         token: '$token',
         connectorId: '${config.connectorId}',
         connectionId: '$connectionId',
+        institution: '${config.institution}',
       };
       const compactedOptions = Object.keys(options).reduce((acc, key) => {
         if (options[key] !== 'null') {
