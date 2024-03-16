@@ -1,3 +1,8 @@
+## Version 2.0.1
+
+- Expose institution in Flutter SDK
+- Add agent QSP for analytic
+
 ## Version 2.0.0
 
 - Support Plaid

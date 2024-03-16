@@ -5,6 +5,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:quiltt_connector/configuration.dart';
 import 'package:quiltt_connector/event.dart';
+import 'package:quiltt_connector/quiltt_sdk_version.dart';
 
 /// This class is the entry point for the Quiltt Connector SDK.
 class QuilttConnector {
@@ -191,7 +192,7 @@ class _WebViewPage {
   Widget build(BuildContext context, {String? token, String? connectionId}) {
     var oauthRedirectUrl = Uri.encodeComponent(config.oauthRedirectUrl);
     var connectorUrl =
-        'https://${config.connectorId}.quiltt.app/?mode=webview&oauth_redirect_url=$oauthRedirectUrl&sdk=flutter';
+        'https://${config.connectorId}.quiltt.app/?mode=webview&oauth_redirect_url=$oauthRedirectUrl&agent=flutter-$quilttSdkVersion';
     debugPrint(connectorUrl);
     var initInjectedJavaScript = '''
       const options = {
