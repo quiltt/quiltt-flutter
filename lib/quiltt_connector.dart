@@ -120,7 +120,7 @@ class _WebViewPage {
     'quiltt.app',
     'quiltt.dev',
     'moneydesktop.com',
-    'cdn.plaid.com/link/v2/stable/link.html',
+    'cdn.plaid.com',
   ];
 
   _shouldRender(String url) {
