@@ -1,3 +1,7 @@
+## Version 2.0.2
+
+- Broaden allowList URLs
+
 ## Version 2.0.1
 
 - Expose institution in Flutter SDK
