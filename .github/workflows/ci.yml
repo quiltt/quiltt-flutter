@@ -18,7 +18,7 @@ jobs:
           cache-key: ${{ runner.tool_cache }}/flutter # optional, change this to force refresh cache
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3"
+          ruby-version: "3.3.0"
 
       - name: Install fastlane and dependencies
         run: bundle install
