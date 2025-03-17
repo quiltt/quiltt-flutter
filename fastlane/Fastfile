@@ -70,14 +70,14 @@ lane :release_patch do
 end
 
 lane :release_minor do
-  new_version = bump_version_file(:patch)
+  new_version = bump_version_file(:minor)
   check_publish
   build_example_app
   release(new_version)
 end
 
 lane :release_major do
-  new_version = bump_version_file(:patch)
+  new_version = bump_version_file(:major)
   check_publish
   build_example_app
   release(new_version)
