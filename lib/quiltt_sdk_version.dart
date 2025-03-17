@@ -1,1 +1,1 @@
-var quilttSdkVersion = "2.0.2";
+var quilttSdkVersion = "2.0.3";
