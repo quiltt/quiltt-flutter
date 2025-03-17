@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import 'package:quiltt_connector/configuration.dart';
 import 'package:quiltt_connector/event.dart';
 import 'package:quiltt_connector/quiltt_sdk_version.dart';
+import 'package:quiltt_connector/url_utils.dart';
 
 /// This class is the entry point for the Quiltt Connector SDK.
 class QuilttConnector {
@@ -133,7 +134,9 @@ class _WebViewPage {
   }
 
   _handleOAuth(String oauthUrl) async {
-    await launchUrlString(oauthUrl, mode: LaunchMode.externalApplication);
+    // Normalize the URL encoding to prevent issues with double-encoding
+    final normalizedUrl = URLUtils.normalizeUrlEncoding(oauthUrl);
+    await launchUrlString(normalizedUrl, mode: LaunchMode.externalApplication);
   }
 
   _handleQuilttConnectorEvent(Uri uri, String initInjectedJavaScript) async {
@@ -149,7 +152,20 @@ class _WebViewPage {
         break;
       case 'oauthrequested':
         var oauthUrl = Uri.decodeFull(uri.queryParameters['oauthUrl']!);
-        await _handleOAuth(oauthUrl);
+
+        // Check if the URL is already encoded
+        if (URLUtils.isEncoded(oauthUrl)) {
+          try {
+            // If encoded, decode once to prevent double-encoding
+            final decodedUrl = Uri.decodeComponent(oauthUrl);
+            await _handleOAuth(decodedUrl);
+          } catch (error) {
+            debugPrint('OAuth URL decoding failed, using original');
+            await _handleOAuth(oauthUrl);
+          }
+        } else {
+          await _handleOAuth(oauthUrl);
+        }
         break;
       case 'exitsuccess':
         onEvent?.call(ConnectorSDKOnEventCallback(
@@ -190,10 +206,34 @@ class _WebViewPage {
   }
 
   Widget build(BuildContext context, {String? token, String? connectionId}) {
-    var oauthRedirectUrl = Uri.encodeComponent(config.oauthRedirectUrl);
+    // Apply smart URL encoding to the redirect URL
+    var safeOAuthRedirectUrl =
+        URLUtils.smartEncodeURIComponent(config.oauthRedirectUrl);
+
+    // Build the URL with proper parameter handling
+    var uriBuilder = Uri.https('${config.connectorId}.quiltt.app', '/', {
+      'mode': 'webview',
+      'agent': 'flutter-$quilttSdkVersion',
+    });
+
+    // Handle the OAuth redirect URL with special care
+    var queryParams = Map<String, String>.from(uriBuilder.queryParameters);
+
+    // If already encoded, decode once to prevent double encoding that would happen
+    // when adding it to the URL parameters
+    if (URLUtils.isEncoded(safeOAuthRedirectUrl)) {
+      final decodedOnce = Uri.decodeComponent(safeOAuthRedirectUrl);
+      queryParams['oauth_redirect_url'] = decodedOnce;
+    } else {
+      queryParams['oauth_redirect_url'] = safeOAuthRedirectUrl;
+    }
+
     var connectorUrl =
-        'https://${config.connectorId}.quiltt.app/?mode=webview&oauth_redirect_url=$oauthRedirectUrl&agent=flutter-$quilttSdkVersion';
+        Uri.https(uriBuilder.authority, uriBuilder.path, queryParams)
+            .toString();
+
     debugPrint(connectorUrl);
+
     var initInjectedJavaScript = '''
       const options = {
         source: 'quiltt',
