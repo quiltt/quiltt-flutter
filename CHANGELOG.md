@@ -1,3 +1,7 @@
+## Version 3.0.0
+
+- Migrate to 'Navigate' message
+
 ## Version 2.0.2
 
 - Broaden allowList URLs
