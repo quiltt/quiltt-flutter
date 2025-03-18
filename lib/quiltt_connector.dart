@@ -1,4 +1,4 @@
-library quiltt_connector;
+library;
 
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -150,21 +150,25 @@ class _WebViewPage {
       case 'load':
         controller.runJavaScript(initInjectedJavaScript);
         break;
-      case 'oauthrequested':
-        var oauthUrl = Uri.decodeFull(uri.queryParameters['oauthUrl']!);
+      case 'navigate':
+        if (uri.queryParameters.containsKey('url')) {
+          var navigateUrl = Uri.decodeFull(uri.queryParameters['url']!);
 
-        // Check if the URL is already encoded
-        if (URLUtils.isEncoded(oauthUrl)) {
-          try {
-            // If encoded, decode once to prevent double-encoding
-            final decodedUrl = Uri.decodeComponent(oauthUrl);
-            await _handleOAuth(decodedUrl);
-          } catch (error) {
-            debugPrint('OAuth URL decoding failed, using original');
-            await _handleOAuth(oauthUrl);
+          // Check if the URL is already encoded
+          if (URLUtils.isEncoded(navigateUrl)) {
+            try {
+              // If encoded, decode once to prevent double-encoding
+              final decodedUrl = Uri.decodeComponent(navigateUrl);
+              await _handleOAuth(decodedUrl);
+            } catch (error) {
+              debugPrint('Navigate URL decoding failed, using original');
+              await _handleOAuth(navigateUrl);
+            }
+          } else {
+            await _handleOAuth(navigateUrl);
           }
         } else {
-          await _handleOAuth(oauthUrl);
+          debugPrint('Navigate URL missing from request');
         }
         break;
       case 'exitsuccess':
