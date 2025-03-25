@@ -1,3 +1,7 @@
+## Version 3.0.1
+
+- Fix inconsistent Quiltt Connector event handling on different platforms
+
 ## Version 3.0.0
 
 - Migrate to 'Navigate' message
