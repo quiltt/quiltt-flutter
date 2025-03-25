@@ -145,8 +145,11 @@ class _WebViewPage {
       connectionId: uri.queryParameters['connectionId'],
       profileId: uri.queryParameters['profileId'],
     );
-    String eventType = uri.host;
-    switch (uri.host) {
+
+    // Normalize case to avoid case sensitivity issues
+    String eventType = uri.host.toLowerCase();
+
+    switch (eventType) {
       case 'load':
         controller.runJavaScript(initInjectedJavaScript);
         break;
@@ -194,8 +197,8 @@ class _WebViewPage {
             type: eventType, eventMetadata: eventMetadata));
         onExit?.call(ConnectorSDKOnEventExitCallback(
             type: eventType, eventMetadata: eventMetadata));
-        onExitAbort?.call(
-            ConnectorSDKOnExitAbortCallback(eventMetadata: eventMetadata));
+        onExitError?.call(
+            ConnectorSDKOnExitErrorCallback(eventMetadata: eventMetadata));
         _closeWebView();
         break;
       case 'authenticate':
