@@ -48,3 +48,4 @@ Feature Description...
 - [ ] **Version considerations**
   - Should this be a patch, minor, or major version bump?
   - Are any breaking changes clearly documented?
+  - **Add appropriate release label** (`release:patch`, `release:minor`, `release:major`) before merging

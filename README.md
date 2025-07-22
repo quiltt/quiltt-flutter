@@ -6,7 +6,7 @@ The Quiltt Flutter SDK provides a Widget for integrating [Quiltt Connector](http
 
 Note that this SDK currently supports iOS and Android. We welcome contributions to add support for other Flutter platforms!
 
-See the official guide at: https://quiltt.dev/connector/sdk/flutter
+See the official guide at: [https://quiltt.dev/connector/sdk/flutter](https://quiltt.dev/connector/sdk/flutter)
 
 ## Installation
 
@@ -205,16 +205,19 @@ class _MyAppState extends State<MyApp> {
 ### Common Issues
 
 **WebView shows white screen after authentication:**
+
 - Verify your `oauthRedirectUrl` is properly configured
 - Ensure deep link handling is set up correctly
 - Check that your redirect URL uses HTTPS scheme
 
 **OAuth redirect not working:**
+
 - Confirm your app's URL scheme matches the `oauthRedirectUrl`
 - Verify deep link intent filters are correctly configured
 - Test deep link functionality with `adb shell am start -W -a android.intent.action.VIEW -d "your-redirect-url" your.package.name`
 
 **Callbacks not firing:**
+
 - Ensure you're handling the OAuth redirect properly in your app
 - Check that the redirect URL leads back to your app
 - Verify the `connectorId` is correct
@@ -231,6 +234,14 @@ if (kDebugMode) {
   debugPrint('Quiltt SDK running in debug mode');
 }
 ```
+
+## Releases
+
+This SDK uses automated releases. When maintainers merge PRs with release labels, new versions are automatically published to pub.dev.
+
+**Latest Version:** [![pub package](https://img.shields.io/pub/v/quiltt_connector.svg)](https://pub.dev/packages/quiltt_connector)
+
+For release process details, see [RELEASING.md](RELEASING.md).
 
 ## Contributing
 

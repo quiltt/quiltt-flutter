@@ -73,7 +73,7 @@ There are many ways to contribute to the Quiltt Flutter SDK:
 
 **Bug Report Template:**
 
-```
+```md
 **Describe the bug**
 A clear description of what the bug is.
 
@@ -110,6 +110,7 @@ Any other context about the problem.
 ### Platform Support
 
 We welcome contributions to extend platform support:
+
 - **Web support** - WebView integration for Flutter web
 - **macOS/Windows/Linux** - Desktop platform implementations
 - **Platform-specific optimizations**
@@ -158,17 +159,23 @@ We welcome contributions to extend platform support:
 
 ### Commit Message Format
 
-We use conventional commits for clear commit history:
+We prefer clear, descriptive commit messages that start with action verbs:
 
-- `feat:` - New features
-- `fix:` - Bug fixes
-- `docs:` - Documentation changes
-- `style:` - Code style changes (formatting, etc.)
-- `refactor:` - Code refactoring
-- `test:` - Adding or updating tests
-- `chore:` - Maintenance tasks
+- `Add` - New features or functionality
+- `Fix` - Bug fixes
+- `Update` - Changes to existing features
+- `Refactor` - Code restructuring without functional changes
+- `Remove` - Deleting code or features
+- `Improve` - Enhancements to existing functionality
 
-Example: `fix: resolve Finicity OAuth redirect handling`
+**Examples:**
+
+- `Add support for custom OAuth redirect URLs`
+- `Fix Finicity OAuth redirect handling`
+- `Update URLUtils to match iOS behavior`
+- `Refactor WebView navigation logic`
+
+**Note:** Release versioning is handled automatically via PR labels, not commit message conventions.
 
 ### Testing
 
@@ -182,38 +189,36 @@ Example: `fix: resolve Finicity OAuth redirect handling`
 
 **Pull Request Template:**
 
-```md
-## Description
-Brief description of changes made.
-
-## Type of Change
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Documentation update
-
-## Testing
-- [ ] Tested on iOS
-- [ ] Tested on Android
-- [ ] Tested with example app
-- [ ] Tested OAuth redirects
-
-## Checklist
-- [ ] Code follows project style guidelines
-- [ ] Self-review completed
-- [ ] Documentation updated (if applicable)
-- [ ] No breaking changes (or clearly documented)
-```
+See [pull_request_template.md](./.github/pull_request_template.md)
 
 ## Release Process
 
-The project uses automated releases via Fastlane:
+The project uses **automated label-based releases**:
 
-- **Patch releases** (`fastlane release_patch`) - Bug fixes
-- **Minor releases** (`fastlane release_minor`) - New features
-- **Major releases** (`fastlane release_major`) - Breaking changes
+- **Patch releases** (`release:patch` label) - Bug fixes, documentation updates
+- **Minor releases** (`release:minor` label) - New features, enhancements  
+- **Major releases** (`release:major` label) - Breaking changes, major API changes
 
-Maintainers handle releases, but contributors should indicate the type of change in their PRs.
+### How to Trigger a Release
+
+1. **Create your PR** with changes
+2. **Add appropriate release label** before merging:
+   - `release:patch` for bug fixes
+   - `release:minor` for new features
+   - `release:major` for breaking changes
+3. **Merge the PR** - Release happens automatically!
+
+The automation will:
+
+- Calculate new version number
+- Update `pubspec.yaml` and `lib/quiltt_sdk_version.dart`
+- Update `CHANGELOG.md` with your changes
+- Publish to pub.dev
+- Create GitHub release
+
+**No manual commands needed!** See [RELEASING.md](RELEASING.md) for detailed instructions.
+
+Contributors should indicate the type of change in their PRs using the pull request template.
 
 ## Code Review Process
 
