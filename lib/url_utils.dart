@@ -10,12 +10,16 @@ class URLUtils {
     final hasEncodedChars =
         RegExp(r'%[0-9A-F]{2}', caseSensitive: false).hasMatch(string);
 
-    // Check if double encoding has occurred (e.g., %253A instead of %3A)
-    final hasDoubleEncoding =
-        RegExp(r'%25[0-9A-F]{2}', caseSensitive: false).hasMatch(string);
+    // Match iOS behavior - ignore double encoding check for now
+    return hasEncodedChars;
 
+    // TODO: Decide what to do with double encoding
+    // Check if double encoding has occurred (e.g., %253A instead of %3A)
+    // final hasDoubleEncoding =
+    //     RegExp(r'%25[0-9A-F]{2}', caseSensitive: false).hasMatch(string);
+    //
     // If we have encoded chars but no double encoding, it's likely properly encoded
-    return hasEncodedChars && !hasDoubleEncoding;
+    // return hasEncodedChars && !hasDoubleEncoding;
   }
 
   /// Smart URL encoder that ensures a string is encoded exactly once
@@ -28,10 +32,15 @@ class URLUtils {
       return string;
     }
 
-    // Otherwise, encode it
-    final encoded = Uri.encodeComponent(string);
-    debugPrint('URL encoded from: $string to: $encoded');
-    return encoded;
+    // Otherwise, encode it with error handling
+    try {
+      final encoded = Uri.encodeComponent(string);
+      debugPrint('URL encoded from: $string to: $encoded');
+      return encoded;
+    } catch (error) {
+      debugPrint('URL encoding failed for: $string, returning original');
+      return string; // Fallback like iOS does
+    }
   }
 
   /// Checks if a string appears to be double-encoded

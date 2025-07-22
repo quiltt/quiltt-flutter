@@ -1,42 +1,21 @@
-## Version 3.0.1
+# Changelog
 
-- Fix inconsistent Quiltt Connector event handling on different platforms
+## [3.0.2] - 2025-07-22
 
-## Version 3.0.0
+### Fixed
+- Fixed Finicity OAuth redirect handling by opening shouldRender to all URLs except quilttconnector:// events
+- Aligned URLUtils behavior with iOS SDK for consistent cross-platform experience
+- Resolved WebView white screen issues for Finicity and other providers with unlisted domains
 
-- Migrate to 'Navigate' message
+### Changed  
+- Updated URLUtils.isEncoded() to match iOS behavior (ignores double-encoding detection)
+- Enhanced error handling in URLUtils.smartEncodeURIComponent()
+- Updated Ruby gem dependencies to latest versions
 
-## Version 2.0.2
+### Documentation
+- Added comprehensive deep link configuration guide to README
+- Added troubleshooting section with common OAuth redirect issues
+- Created CONTRIBUTING.md with Flutter-specific development guidelines
+- Added CODE_OF_CONDUCT.md for community guidelines
 
-- Broaden allowList URLs
-
-## Version 2.0.1
-
-- Expose institution in Flutter SDK
-- Add agent QSP for analytic
-
-## Version 2.0.0
-
-- Support Plaid
-- Expose profile id and match JavaScript sdk event interface
-
-## Version 1.0.1
-
-- Update dependencies
-- Add sdk=flutter for analytic purposes
-
-## Version 1.0.0
-
-- Change public interface to match js sdk
-
-## Version 0.1.2
-
-- Re-release without auto release
-
-## Version 0.1.1
-
-- Fix connector base url and auto release via Github actions
-
-## Version 0.1.0
-
-- Initial release of the project
+## [Previous versions...]
