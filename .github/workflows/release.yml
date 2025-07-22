@@ -1,0 +1,222 @@
+name: Automated Release and Publish
+
+on:
+  pull_request:
+    types: [closed]
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  release:
+    name: Release and Publish
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for release labels
+        id: check-labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(label => label.name);
+            console.log('PR labels:', labels);
+            
+            let releaseType = null;
+            let shouldRelease = false;
+            
+            if (labels.includes('release:major')) {
+              releaseType = 'major';
+              shouldRelease = true;
+            } else if (labels.includes('release:minor')) {
+              releaseType = 'minor';
+              shouldRelease = true;
+            } else if (labels.includes('release:patch')) {
+              releaseType = 'patch';
+              shouldRelease = true;
+            }
+            
+            core.setOutput('should_release', shouldRelease.toString());
+            core.setOutput('release_type', releaseType || '');
+            core.setOutput('pr_title', context.payload.pull_request.title);
+            core.setOutput('pr_number', context.payload.pull_request.number.toString());
+            
+            if (shouldRelease) {
+              console.log(`🚀 Release triggered: ${releaseType}`);
+            } else {
+              console.log('ℹ️ No release labels found, skipping release');
+            }
+
+      - name: Setup Ruby
+        if: ${{ steps.check-labels.outputs.should_release == 'true' }}
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3.0'
+          bundler-cache: true
+
+      - name: Setup Flutter
+        if: steps.check-labels.outputs.should_release == 'true'
+        uses: flutter-actions/setup-flutter@v2
+        with:
+          version: "3.32.7"
+          channel: "stable"
+          cache: true
+
+      - name: Install dependencies
+        if: steps.check-labels.outputs.should_release == 'true'
+        run: |
+          bundle install
+          flutter pub get
+
+      - name: Configure Git
+        if: steps.check-labels.outputs.should_release == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Get current version
+        if: steps.check-labels.outputs.should_release == 'true'
+        id: current-version
+        run: |
+          CURRENT_VERSION=$(grep "version:" pubspec.yaml | sed 's/version: //')
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
+
+      - name: Calculate new version
+        if: steps.check-labels.outputs.should_release == 'true'
+        id: new-version
+        run: |
+          # Use Ruby semantic gem for version bumping
+          bundle exec ruby -e "
+            require 'semantic'
+            current = Semantic::Version.new('${{ steps.current-version.outputs.current_version }}')
+            new_version = current.increment!(:${{ steps.check-labels.outputs.release_type }})
+            puts new_version
+            File.write('NEW_VERSION', new_version.to_s)
+          "
+          
+          NEW_VERSION=$(cat NEW_VERSION)
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "🎯 Releasing version: $NEW_VERSION"
+
+      - name: Update version files
+        if: steps.check-labels.outputs.should_release == 'true'
+        run: |
+          # Update version files using fastlane functions
+          bundle exec ruby -e "
+            require_relative 'fastlane/Fastfile'
+            genereate_new_pubspec_yaml('${{ steps.new-version.outputs.new_version }}')
+            generate_release_version_file('${{ steps.new-version.outputs.new_version }}')
+          "
+
+      - name: Update changelog
+        if: steps.check-labels.outputs.should_release == 'true'
+        run: |
+          # Get commits from this PR
+          PR_COMMITS=$(git log --pretty=format:"- %s" HEAD~${{ github.event.pull_request.commits }}..HEAD)
+          
+          # Variables for changelog
+          DATE=$(date +%Y-%m-%d)
+          RELEASE_TYPE="${{ steps.check-labels.outputs.release_type }}"
+          VERSION="${{ steps.new-version.outputs.new_version }}"
+          PR_TITLE="${{ steps.check-labels.outputs.pr_title }}"
+          PR_NUMBER="${{ steps.check-labels.outputs.pr_number }}"
+          
+          case $RELEASE_TYPE in
+            major) SECTION="Breaking Changes" ;;
+            minor) SECTION="Features" ;;
+            patch) SECTION="Bug Fixes" ;;
+          esac
+          
+          # Create changelog entry as single line with \n
+          CHANGELOG_ENTRY="## [$VERSION] - $DATE\n\n### $SECTION\n- $PR_TITLE (#$PR_NUMBER)\n\n$PR_COMMITS\n\n"
+          
+          # Prepend to existing changelog
+          if [ -f CHANGELOG.md ]; then
+            echo -e "$CHANGELOG_ENTRY$(cat CHANGELOG.md)" > CHANGELOG.md
+          else
+            echo -e "# Changelog\n\n$CHANGELOG_ENTRY" > CHANGELOG.md
+          fi
+
+      - name: Commit version updates
+        if: steps.check-labels.outputs.should_release == 'true'
+        run: |
+          git add pubspec.yaml lib/quiltt_sdk_version.dart CHANGELOG.md
+          git commit -m "chore: release v${{ steps.new-version.outputs.new_version }}"
+          git push origin main
+
+      - name: Create Git tag
+        if: steps.check-labels.outputs.should_release == 'true'
+        run: |
+          git tag "v${{ steps.new-version.outputs.new_version }}"
+          git push origin "v${{ steps.new-version.outputs.new_version }}"
+
+      - name: Validate package
+        if: steps.check-labels.outputs.should_release == 'true'
+        run: |
+          flutter pub get
+          flutter analyze lib
+          flutter pub publish --dry-run
+
+      - name: Setup pub.dev credentials
+        if: steps.check-labels.outputs.should_release == 'true'
+        run: |
+          mkdir -p ~/.pub-cache
+          cat > ~/.pub-cache/credentials.json << EOF
+          {
+            "accessToken": "${{ secrets.PUB_DEV_PUBLISH_ACCESS_TOKEN }}",
+            "refreshToken": "${{ secrets.PUB_DEV_PUBLISH_REFRESH_TOKEN }}",
+            "tokenEndpoint": "${{ secrets.PUB_DEV_PUBLISH_TOKEN_ENDPOINT }}",
+            "scopes": ["https://www.googleapis.com/auth/userinfo.email", "openid"],
+            "expiration": ${{ secrets.PUB_DEV_PUBLISH_EXPIRATION }}
+          }
+          EOF
+
+      - name: Publish to pub.dev
+        if: steps.check-labels.outputs.should_release == 'true'
+        run: |
+          flutter pub publish --force
+
+      - name: Create GitHub Release
+        if: steps.check-labels.outputs.should_release == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: "v${{ steps.new-version.outputs.new_version }}"
+          name: "Release v${{ steps.new-version.outputs.new_version }}"
+          body: |
+            ## 🚀 Release v${{ steps.new-version.outputs.new_version }}
+            
+            **Release Type:** ${{ steps.check-labels.outputs.release_type }}
+            **Triggered by PR:** #${{ steps.check-labels.outputs.pr_number }} - ${{ steps.check-labels.outputs.pr_title }}
+            
+            ### Changes
+            This release was automatically created from the merged pull request.
+            
+            See [CHANGELOG.md](./CHANGELOG.md) for detailed changes.
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment on PR with release info
+        if: steps.check-labels.outputs.should_release == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: ${{ steps.check-labels.outputs.pr_number }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🚀 **Release Complete!**
+              
+              This PR triggered a **${{ steps.check-labels.outputs.release_type }}** release:
+              - **Version:** v${{ steps.new-version.outputs.new_version }}
+              - **Published to:** [pub.dev](https://pub.dev/packages/quiltt_connector)
+              - **GitHub Release:** [v${{ steps.new-version.outputs.new_version }}](${context.payload.repository.html_url}/releases/tag/v${{ steps.new-version.outputs.new_version }})
+              
+              ✅ Package is now live on pub.dev!`
+            });

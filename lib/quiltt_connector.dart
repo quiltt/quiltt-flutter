@@ -117,20 +117,21 @@ class _WebViewPage {
     }
   }
 
-  final _shouldRenderList = [
-    'quiltt.app',
-    'quiltt.dev',
-    'moneydesktop.com',
-    'cdn.plaid.com',
-  ];
+  // TODO: Reimplement this once we have a better collection of URLs
+  // final _shouldRenderList = [
+  //   'quiltt.app',
+  //   'quiltt.dev',
+  //   'moneydesktop.com',
+  //   'cdn.plaid.com',
+  // ];
 
   _shouldRender(String url) {
-    for (var host in _shouldRenderList) {
-      if (url.contains(host)) {
-        return true;
-      }
+    // Don't render Quiltt connector events in WebView
+    if (url.startsWith('quilttconnector://')) {
+      return false;
     }
-    return false;
+    // Render everything else (like iOS does)
+    return true;
   }
 
   _handleOAuth(String oauthUrl) async {

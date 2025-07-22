@@ -6,7 +6,7 @@ The Quiltt Flutter SDK provides a Widget for integrating [Quiltt Connector](http
 
 Note that this SDK currently supports iOS and Android. We welcome contributions to add support for other Flutter platforms!
 
-See the official guide at: https://quiltt.dev/connector/sdk/flutter
+See the official guide at: [https://quiltt.dev/connector/sdk/flutter](https://quiltt.dev/connector/sdk/flutter)
 
 ## Installation
 
@@ -101,3 +101,152 @@ class _Example extends State {
   }
 }
 ```
+
+## Deep Link Configuration
+
+For OAuth redirect flows to work properly, you must configure deep links in your Flutter app to handle the `oauthRedirectUrl` parameter.
+
+### iOS Configuration
+
+Add the following URL scheme to your `ios/Runner/Info.plist`:
+
+```xml
+<key>CFBundleURLTypes</key>
+<array>
+  <dict>
+    <key>CFBundleURLName</key>
+    <string>quiltt.connector</string>
+    <key>CFBundleURLSchemes</key>
+    <array>
+      <string>your-app-scheme</string>
+    </array>
+  </dict>
+</array>
+```
+
+### Android Configuration
+
+Add an intent filter to your `android/app/src/main/AndroidManifest.xml`:
+
+```xml
+<activity
+    android:name=".MainActivity"
+    android:exported="true"
+    android:launchMode="singleTop"
+    android:theme="@style/LaunchTheme">
+    
+    <!-- Standard Flutter activity configuration -->
+    <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.LAUNCHER"/>
+    </intent-filter>
+    
+    <!-- Deep link intent filter for OAuth redirects -->
+    <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="https"
+              android:host="your-app-domain.com" />
+    </intent-filter>
+</activity>
+```
+
+### Flutter Deep Link Handling
+
+Use a package like `app_links` or `uni_links` to handle incoming deep links:
+
+```dart
+import 'package:app_links/app_links.dart';
+
+class _MyAppState extends State<MyApp> {
+  late AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _initDeepLinks();
+  }
+
+  void _initDeepLinks() async {
+    _appLinks = AppLinks();
+    
+    // Listen for incoming links when app is already running
+    _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
+      debugPrint('Deep link received: $uri');
+      _handleDeepLink(uri);
+    });
+
+    // Handle links when app is launched from a deep link
+    final uri = await _appLinks.getInitialLink();
+    if (uri != null) {
+      debugPrint('App launched from deep link: $uri');
+      _handleDeepLink(uri);
+    }
+  }
+
+  void _handleDeepLink(Uri uri) {
+    // Handle the OAuth redirect here
+    // Extract any necessary parameters from the URI
+    // Navigate to appropriate screen or trigger callbacks
+  }
+
+  @override
+  void dispose() {
+    _linkSubscription?.cancel();
+    super.dispose();
+  }
+}
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**WebView shows white screen after authentication:**
+
+- Verify your `oauthRedirectUrl` is properly configured
+- Ensure deep link handling is set up correctly
+- Check that your redirect URL uses HTTPS scheme
+
+**OAuth redirect not working:**
+
+- Confirm your app's URL scheme matches the `oauthRedirectUrl`
+- Verify deep link intent filters are correctly configured
+- Test deep link functionality with `adb shell am start -W -a android.intent.action.VIEW -d "your-redirect-url" your.package.name`
+
+**Callbacks not firing:**
+
+- Ensure you're handling the OAuth redirect properly in your app
+- Check that the redirect URL leads back to your app
+- Verify the `connectorId` is correct
+
+### Debug Mode
+
+Enable debug logging to troubleshoot issues:
+
+```dart
+import 'package:flutter/foundation.dart';
+
+// In debug mode, the SDK will print detailed logs
+if (kDebugMode) {
+  debugPrint('Quiltt SDK running in debug mode');
+}
+```
+
+## Releases
+
+This SDK uses automated releases. When maintainers merge PRs with release labels, new versions are automatically published to pub.dev.
+
+**Latest Version:** [![pub package](https://img.shields.io/pub/v/quiltt_connector.svg)](https://pub.dev/packages/quiltt_connector)
+
+For release process details, see [RELEASING.md](RELEASING.md).
+
+## Contributing
+
+We welcome contributions! Please see our [contributing guidelines](CONTRIBUTING.md) for more information.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
