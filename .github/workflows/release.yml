@@ -167,7 +167,15 @@ jobs:
         if: steps.check-labels.outputs.should_release == 'true'
         run: |
           mkdir -p ~/.pub-cache
-          echo '${{ secrets.PUB_DEV_CREDENTIALS }}' > ~/.pub-cache/credentials.json
+          cat > ~/.pub-cache/credentials.json << EOF
+          {
+            "accessToken": "${{ secrets.PUB_DEV_PUBLISH_ACCESS_TOKEN }}",
+            "refreshToken": "${{ secrets.PUB_DEV_PUBLISH_REFRESH_TOKEN }}",
+            "tokenEndpoint": "${{ secrets.PUB_DEV_PUBLISH_TOKEN_ENDPOINT }}",
+            "scopes": ["https://www.googleapis.com/auth/userinfo.email", "openid"],
+            "expiration": ${{ secrets.PUB_DEV_PUBLISH_EXPIRATION }}
+          }
+          EOF
 
       - name: Publish to pub.dev
         if: steps.check-labels.outputs.should_release == 'true'
