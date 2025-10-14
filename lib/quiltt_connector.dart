@@ -116,6 +116,7 @@ class _WebViewPage {
     if (Navigator.canPop(context)) {
       controller.clearLocalStorage();
       Navigator.pop(context);
+      _isInitialized = false; // Reset initialization state
     }
   }
 
