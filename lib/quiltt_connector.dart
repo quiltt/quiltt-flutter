@@ -86,6 +86,8 @@ class _WebViewPage {
   late BuildContext context;
   late QuilttConnectorConfiguration config;
   String? token;
+  bool _isInitialized = false;
+
   Function(ConnectorSDKOnEventCallback event)? onEvent;
   Function(ConnectorSDKOnEventExitCallback event)? onExit;
   Function(ConnectorSDKOnExitSuccessCallback event)? onExitSuccess;
@@ -150,67 +152,128 @@ class _WebViewPage {
     // Normalize case to avoid case sensitivity issues
     String eventType = uri.host.toLowerCase();
 
-    switch (eventType) {
-      case 'load':
-        controller.runJavaScript(initInjectedJavaScript);
-        break;
-      case 'navigate':
-        if (uri.queryParameters.containsKey('url')) {
-          var navigateUrl = Uri.decodeFull(uri.queryParameters['url']!);
+    try {
+      switch (eventType) {
+        case 'load':
+          try {
+            await controller.runJavaScript(initInjectedJavaScript);
+          } catch (error) {
+            debugPrint('Failed to inject initialization JavaScript: $error');
+          }
+          break;
+        case 'navigate':
+          if (uri.queryParameters.containsKey('url')) {
+            var navigateUrl = Uri.decodeFull(uri.queryParameters['url']!);
 
-          // Check if the URL is already encoded
-          if (URLUtils.isEncoded(navigateUrl)) {
-            try {
-              // If encoded, decode once to prevent double-encoding
-              final decodedUrl = Uri.decodeComponent(navigateUrl);
-              await _handleOAuth(decodedUrl);
-            } catch (error) {
-              debugPrint('Navigate URL decoding failed, using original');
+            // Check if the URL is already encoded
+            if (URLUtils.isEncoded(navigateUrl)) {
+              try {
+                // If encoded, decode once to prevent double-encoding
+                final decodedUrl = Uri.decodeComponent(navigateUrl);
+                await _handleOAuth(decodedUrl);
+              } catch (error) {
+                debugPrint('Navigate URL decoding failed, using original');
+                await _handleOAuth(navigateUrl);
+              }
+            } else {
               await _handleOAuth(navigateUrl);
             }
           } else {
-            await _handleOAuth(navigateUrl);
+            debugPrint('Navigate URL missing from request');
           }
-        } else {
-          debugPrint('Navigate URL missing from request');
-        }
-        break;
-      case 'exitsuccess':
-        onEvent?.call(ConnectorSDKOnEventCallback(
-            type: eventType, eventMetadata: eventMetadata));
-        onExit?.call(ConnectorSDKOnEventExitCallback(
-            type: eventType, eventMetadata: eventMetadata));
-        onExitSuccess?.call(
-            ConnectorSDKOnExitSuccessCallback(eventMetadata: eventMetadata));
+          break;
+        case 'exitsuccess':
+          try {
+            onEvent?.call(ConnectorSDKOnEventCallback(
+                type: eventType, eventMetadata: eventMetadata));
+            onExit?.call(ConnectorSDKOnEventExitCallback(
+                type: eventType, eventMetadata: eventMetadata));
+            onExitSuccess?.call(ConnectorSDKOnExitSuccessCallback(
+                eventMetadata: eventMetadata));
+          } catch (error) {
+            debugPrint('Error in exit success callbacks: $error');
+          } finally {
+            _closeWebView();
+          }
+          break;
+        case 'exitabort':
+          try {
+            onEvent?.call(ConnectorSDKOnEventCallback(
+                type: eventType, eventMetadata: eventMetadata));
+            onExit?.call(ConnectorSDKOnEventExitCallback(
+                type: eventType, eventMetadata: eventMetadata));
+            onExitAbort?.call(
+                ConnectorSDKOnExitAbortCallback(eventMetadata: eventMetadata));
+          } catch (error) {
+            debugPrint('Error in exit abort callbacks: $error');
+          } finally {
+            _closeWebView();
+          }
+          break;
+        case 'exiterror':
+          try {
+            onEvent?.call(ConnectorSDKOnEventCallback(
+                type: eventType, eventMetadata: eventMetadata));
+            onExit?.call(ConnectorSDKOnEventExitCallback(
+                type: eventType, eventMetadata: eventMetadata));
+            onExitError?.call(
+                ConnectorSDKOnExitErrorCallback(eventMetadata: eventMetadata));
+          } catch (error) {
+            debugPrint('Error in exit error callbacks: $error');
+          } finally {
+            _closeWebView();
+          }
+          break;
+        case 'authenticate':
+          try {
+            // This was exposed as a callback for web, to allow hiding of the loading box.
+            // Mobile is fullscreen, so they are going to get loading screen.
+            onEvent?.call(ConnectorSDKOnEventCallback(
+                type: eventType, eventMetadata: eventMetadata));
+          } catch (error) {
+            debugPrint('Error in authenticate callback: $error');
+          }
+          break;
+        default:
+          debugPrint('Unknown event: ${uri.host}');
+      }
+    } catch (error) {
+      debugPrint('Error handling Quiltt connector event: $error');
+      // Only close WebView on exit events to prevent users from getting stuck
+      if (eventType.startsWith('exit')) {
         _closeWebView();
-        break;
-      case 'exitabort':
-        onEvent?.call(ConnectorSDKOnEventCallback(
-            type: eventType, eventMetadata: eventMetadata));
-        onExit?.call(ConnectorSDKOnEventExitCallback(
-            type: eventType, eventMetadata: eventMetadata));
-        onExitAbort?.call(
-            ConnectorSDKOnExitAbortCallback(eventMetadata: eventMetadata));
-        _closeWebView();
-        break;
-      case 'exiterror':
-        onEvent?.call(ConnectorSDKOnEventCallback(
-            type: eventType, eventMetadata: eventMetadata));
-        onExit?.call(ConnectorSDKOnEventExitCallback(
-            type: eventType, eventMetadata: eventMetadata));
-        onExitError?.call(
-            ConnectorSDKOnExitErrorCallback(eventMetadata: eventMetadata));
-        _closeWebView();
-        break;
-      case 'authenticate':
-        // This was exposed as a callback for web, to allow hiding of the loading box.
-        // Mobile is fullscreen, so they are going to get loading screen.
-        onEvent?.call(ConnectorSDKOnEventCallback(
-            type: eventType, eventMetadata: eventMetadata));
-        break;
-      default:
-        debugPrint('Unknown event: ${uri.host}');
+      }
     }
+  }
+
+  void _initializeController(
+      String connectorUrl, String initInjectedJavaScript) {
+    controller
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onProgress: (int progress) {},
+          onPageStarted: (String url) {},
+          onPageFinished: (String url) {},
+          onWebResourceError: (WebResourceError error) {},
+          onNavigationRequest: (NavigationRequest request) async {
+            Uri uri = Uri.parse(request.url);
+
+            if (uri.scheme == 'quilttconnector') {
+              await _handleQuilttConnectorEvent(uri, initInjectedJavaScript);
+              return NavigationDecision.prevent;
+            }
+
+            if (_shouldRender(request.url)) {
+              return NavigationDecision.navigate;
+            }
+
+            await _handleOAuth(request.url);
+            return NavigationDecision.prevent;
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(connectorUrl));
   }
 
   Widget build(BuildContext context, {String? token, String? connectionId}) {
@@ -260,32 +323,11 @@ class _WebViewPage {
       window.postMessage(compactedOptions);
      ''';
 
-    controller
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onProgress: (int progress) {},
-          onPageStarted: (String url) {},
-          onPageFinished: (String url) {},
-          onWebResourceError: (WebResourceError error) {},
-          onNavigationRequest: (NavigationRequest request) async {
-            Uri uri = Uri.parse(request.url);
-
-            if (uri.scheme == 'quilttconnector') {
-              await _handleQuilttConnectorEvent(uri, initInjectedJavaScript);
-              return NavigationDecision.prevent;
-            }
-
-            if (_shouldRender(request.url)) {
-              return NavigationDecision.navigate;
-            }
-
-            await _handleOAuth(request.url);
-            return NavigationDecision.prevent;
-          },
-        ),
-      )
-      ..loadRequest(Uri.parse(connectorUrl));
+    // Only initialize the controller once
+    if (!_isInitialized) {
+      _initializeController(connectorUrl, initInjectedJavaScript);
+      _isInitialized = true;
+    }
 
     return Scaffold(
         body: SafeArea(child: WebViewWidget(controller: controller)));
