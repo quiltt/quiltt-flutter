@@ -11,7 +11,7 @@ jobs:
     name: Release and Publish
     runs-on: ubuntu-latest
     if: github.event.pull_request.merged == true
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,10 +26,10 @@ jobs:
           script: |
             const labels = context.payload.pull_request.labels.map(label => label.name);
             console.log('PR labels:', labels);
-            
+
             let releaseType = null;
             let shouldRelease = false;
-            
+
             if (labels.includes('release:major')) {
               releaseType = 'major';
               shouldRelease = true;
@@ -40,12 +40,12 @@ jobs:
               releaseType = 'patch';
               shouldRelease = true;
             }
-            
+
             core.setOutput('should_release', shouldRelease.toString());
             core.setOutput('release_type', releaseType || '');
             core.setOutput('pr_title', context.payload.pull_request.title);
             core.setOutput('pr_number', context.payload.pull_request.number.toString());
-            
+
             if (shouldRelease) {
               console.log(`🚀 Release triggered: ${releaseType}`);
             } else {
@@ -56,7 +56,7 @@ jobs:
         if: ${{ steps.check-labels.outputs.should_release == 'true' }}
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.3.0'
+          ruby-version: "3.3.0"
           bundler-cache: true
 
       - name: Setup Flutter
@@ -83,7 +83,7 @@ jobs:
         if: steps.check-labels.outputs.should_release == 'true'
         id: current-version
         run: |
-          CURRENT_VERSION=$(grep "version:" pubspec.yaml | sed 's/version: //')
+          CURRENT_VERSION=$(grep "^version:" pubspec.yaml | sed 's/version: *//' | tr -d ' ')
           echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
           echo "Current version: $CURRENT_VERSION"
 
@@ -99,7 +99,7 @@ jobs:
             puts new_version
             File.write('NEW_VERSION', new_version.to_s)
           "
-          
+
           NEW_VERSION=$(cat NEW_VERSION)
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "🎯 Releasing version: $NEW_VERSION"
@@ -107,35 +107,48 @@ jobs:
       - name: Update version files
         if: steps.check-labels.outputs.should_release == 'true'
         run: |
-          # Update version files using fastlane functions
-          bundle exec ruby -e "
-            require_relative 'fastlane/Fastfile'
-            genereate_new_pubspec_yaml('${{ steps.new-version.outputs.new_version }}')
-            generate_release_version_file('${{ steps.new-version.outputs.new_version }}')
+          VERSION="${{ steps.new-version.outputs.new_version }}"
+
+          # Validate version format
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ Invalid version format: $VERSION"
+            exit 1
+          fi
+
+          # Update pubspec.yaml
+          ruby -ryaml -e "
+            yaml = YAML.load_file('pubspec.yaml')
+            yaml['version'] = '$VERSION'
+            File.write('pubspec.yaml', yaml.to_yaml)
           "
+
+          # Update quiltt_sdk_version.dart
+          echo "var quilttSdkVersion = \"$VERSION\";" > lib/quiltt_sdk_version.dart
+
+          echo "✅ Updated version files to $VERSION"
 
       - name: Update changelog
         if: steps.check-labels.outputs.should_release == 'true'
         run: |
           # Get commits from this PR
           PR_COMMITS=$(git log --pretty=format:"- %s" HEAD~${{ github.event.pull_request.commits }}..HEAD)
-          
+
           # Variables for changelog
           DATE=$(date +%Y-%m-%d)
           RELEASE_TYPE="${{ steps.check-labels.outputs.release_type }}"
           VERSION="${{ steps.new-version.outputs.new_version }}"
           PR_TITLE="${{ steps.check-labels.outputs.pr_title }}"
           PR_NUMBER="${{ steps.check-labels.outputs.pr_number }}"
-          
+
           case $RELEASE_TYPE in
             major) SECTION="Breaking Changes" ;;
             minor) SECTION="Features" ;;
             patch) SECTION="Bug Fixes" ;;
           esac
-          
+
           # Create changelog entry as single line with \n
           CHANGELOG_ENTRY="## [$VERSION] - $DATE\n\n### $SECTION\n- $PR_TITLE (#$PR_NUMBER)\n\n$PR_COMMITS\n\n"
-          
+
           # Prepend to existing changelog
           if [ -f CHANGELOG.md ]; then
             echo -e "$CHANGELOG_ENTRY$(cat CHANGELOG.md)" > CHANGELOG.md
@@ -190,13 +203,13 @@ jobs:
           name: "Release v${{ steps.new-version.outputs.new_version }}"
           body: |
             ## 🚀 Release v${{ steps.new-version.outputs.new_version }}
-            
+
             **Release Type:** ${{ steps.check-labels.outputs.release_type }}
             **Triggered by PR:** #${{ steps.check-labels.outputs.pr_number }} - ${{ steps.check-labels.outputs.pr_title }}
-            
+
             ### Changes
             This release was automatically created from the merged pull request.
-            
+
             See [CHANGELOG.md](./CHANGELOG.md) for detailed changes.
           generate_release_notes: true
         env:
