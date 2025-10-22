@@ -123,7 +123,7 @@ jobs:
           "
 
           # Update quiltt_sdk_version.dart
-          echo 'var quilttSdkVersion = \"$VERSION\";' > lib/quiltt_sdk_version.dart
+          echo "var quilttSdkVersion = \"$VERSION\";" > lib/quiltt_sdk_version.dart
 
           echo "✅ Updated version files to $VERSION"
 
