@@ -4,11 +4,12 @@ PODS:
     - Flutter
   - webview_flutter_wkwebview (0.0.1):
     - Flutter
+    - FlutterMacOS
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
-  - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/ios`)
+  - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/darwin`)
 
 EXTERNAL SOURCES:
   Flutter:
@@ -16,13 +17,13 @@ EXTERNAL SOURCES:
   url_launcher_ios:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
   webview_flutter_wkwebview:
-    :path: ".symlinks/plugins/webview_flutter_wkwebview/ios"
+    :path: ".symlinks/plugins/webview_flutter_wkwebview/darwin"
 
 SPEC CHECKSUMS:
-  Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
-  url_launcher_ios: 68d46cc9766d0c41dbdc884310529557e3cd7a86
-  webview_flutter_wkwebview: 2e2d318f21a5e036e2c3f26171342e95908bd60a
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
+  webview_flutter_wkwebview: 1821ceac936eba6f7984d89a9f3bcb4dea99ebb2
 
-PODFILE CHECKSUM: 70d9d25280d0dd177a5f637cdb0f0b0b12c6a189
+PODFILE CHECKSUM: 819463e6a0290f5a72f145ba7cde16e8b6ef0796
 
-COCOAPODS: 1.12.1
+COCOAPODS: 1.16.2
