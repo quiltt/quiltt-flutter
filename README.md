@@ -1,5 +1,8 @@
 # Quiltt Flutter SDK
 
+> **Warning**
+> This repository is a public archive. The latest code for this package can be found at: [https://github.com/quiltt/quiltt-sdks/tree/main/packages/flutter](https://github.com/quiltt/quiltt-sdks/tree/main/packages/flutter)
+
 [![pub package](https://img.shields.io/pub/v/quiltt_connector.svg)](https://pub.dev/packages/quiltt_connector)
 
 The Quiltt Flutter SDK provides a Widget for integrating [Quiltt Connector](https://quiltt.dev/connector) into your Flutter app.
@@ -13,7 +16,7 @@ See the official guide at: [https://quiltt.dev/connector/sdk/flutter](https://qu
 Add the package to your project:
 
 ```sh
-$ flutter pub add quiltt_connector
+flutter pub add quiltt_connector
 ```
 
 ## Usage
